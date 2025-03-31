@@ -1,16 +1,4 @@
-'''
-Author: mxy 1356464784@qq.com
-Date: 2023-12-02 18:21:02
-LastEditors: mxy 1356464784@qq.com
-LastEditTime: 2023-12-02 21:39:54
-FilePath: /NeteaseCloudPlayListDownload/download.py
-Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
-'''
-'''
-1. 
-'''
-
-from login import UserConfig
+from login import UserConfig, checkLogin, login
 import requests
 import json
 import concurrent.futures
@@ -96,7 +84,7 @@ def downloadMusic(header, cookie, down, root):
     os.makedirs(root, exist_ok=True)
     
     if not down["title"] or not down["url"]:
-        raise RuntimeError("数据不完整")
+        raise RuntimeError(f"{down['id']} 数据不完整")
     
     max_tries = 10
     fail_times = 0
@@ -116,6 +104,10 @@ def downloadMusic(header, cookie, down, root):
             print(f"重试 {music_name} 第 {fail_times} 次 {e}")
             fail_times += 1
             continue
+    
+    if fail_times == max_tries:
+        print(f"下载 {music_name} 失败")
+        return False
 
 
 def getDownloadList(host, header, cookie, id):
@@ -127,12 +119,13 @@ def getDownloadList(host, header, cookie, id):
 
 
 if __name__ == "__main__":
-    id = 5173444095
+    id = 13464157471
     config = UserConfig("./config.toml")
+    if not checkLogin(config):
+        login(config)
 
     j = getListDetail(config.host, config.header, config.cookie, id)
     ids = getListId(j)
 
-    for music in getMusicDetail(config.host, config.header, config.cookie,
-                                ids):
+    for music in getMusicDetail(config.host, config.header, config.cookie, ids):
         print(music)

@@ -2,7 +2,7 @@
 Author: mxy 1356464784@qq.com
 Date: 2023-12-02 15:55:18
 LastEditors: mxy 1356464784@qq.com
-LastEditTime: 2023-12-02 18:36:35
+LastEditTime: 2023-12-04 18:41:46
 FilePath: /NeteaseCloudPlayListDownload/login.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -53,7 +53,7 @@ class UserConfig:
 
 def checkLogin(config: UserConfig) -> bool:
     if 'cookie' in config.keys:
-        cookies = getCookieDict(config.cookie)
+        cookies = config.cookie
         if confirmCookie(cookies, config.host, config.header):
             return True
 
@@ -141,11 +141,21 @@ def getCookieDict(cook):
 
 
 def confirmCookie(cookies, host, header):
-    # 获取登录状态
-    t = int(time.time())
-    url = host + "/login/status?timestamp=" + str(t)
-    print("获取登录状态中...")
-    response = requests.get(url, headers=header, cookies=cookies)
+    fail_times = 0
+    max_tries = 10
+    
+    while fail_times < max_tries:
+        try:
+            # 获取登录状态
+            t = int(time.time())
+            url = host + "/login/status?timestamp=" + str(t)
+            print("获取登录状态中...")
+            response = requests.get(url, headers=header, cookies=cookies)
+            break
+        except Exception as e:
+            fail_times += 1
+            print(f"重试第 {fail_times} 次: {e}")
+    
     json_obj = json.loads(response.text)
     # print(response.text)
     try:
